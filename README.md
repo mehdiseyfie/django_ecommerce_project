@@ -34,6 +34,4 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
-```
-
-اگر می‌خواهید من مستقیماً برایتان `git init` و commit را انجام بدهم و یا فایل‌های حساس را از تاریخچه git پاک کنم، بگویید تا ادامه دهم.
+```.
