@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">
+        <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+    </h1>
+
+    {% if cart_items %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                            {% if item.uid %}
+                                <div class="cart-item mb-3 p-3 border-bottom {% if forloop.last %}border-bottom-0{% endif %}" data-item-id="{{ item.uid }}">
+                                    <div class="row align-items-center">
+                                        <!-- Product Image -->
+                                        <div class="col-md-2">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" 
+                                                     class="img-fluid rounded" 
+                                                     alt="{{ item.product.name }}">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px">
+                                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Product Details -->
+                                        <div class="col-md-4">
+                                            <h5 class="mb-1">{{ item.product.name }}</h5>
+                                            <p class="text-muted mb-0">
+                                                Price: ${{ item.price|floatformat:2 }}
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Quantity Controls -->
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <button class="btn btn-outline-secondary update-quantity" 
+                                                        data-item-id="{{ item.uid }}" 
+                                                        data-action="decrease"
+                                                        {% if item.quantity <= 1 %}disabled{% endif %}>
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="number" class="form-control text-center quantity-input" 
+                                                       value="{{ item.quantity }}" min="1"
+                                                       data-item-id="{{ item.uid }}">
+                                                <button class="btn btn-outline-secondary update-quantity" 
+                                                        data-item-id="{{ item.uid }}" 
+                                                        data-action="increase">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Total Price -->
+                                        <div class="col-md-2">
+                                            <p class="h5 mb-0 total-price-item">${{ item.get_total_price_item|floatformat:2 }}</p>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="col-md-1">
+                                            <div class="d-flex flex-column gap-2">
+                                                <button class="btn btn-link text-danger remove-item" 
+                                                        data-item-id="{{ item.uid }}"
+                                                        title="Remove item">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% empty %}
+                            <p class="text-center text-muted">No valid items in cart.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="item-count">Subtotal ({{ total_items }} items)</span>
+                                <span class="subtotal">${{ total_price|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span><strong>Total</strong></span>
+                                <span><strong class="total">${{ total_price|floatformat:2 }}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        {% if total_items > 0 %}
+                            <a href="{% url 'orders:order_create' %}" class="btn btn-success w-100 mt-2">
+                                <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                            </a>
+                            <button class="btn btn-outline-danger w-100 mt-2 clear-cart">
+                                <i class="fas fa-trash-alt me-2"></i>Clear Cart
+                            </button>
+                        {% else %}
+                            <button class="btn btn-secondary w-100 empty-cart-btn" disabled>
+                                <i class="fas fa-lock me-2"></i>Cart is Empty
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty Cart -->
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h2>Your cart is empty</h2>
+            <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update quantity
+    document.querySelectorAll('.update-quantity').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const action = this.dataset.action;
+            const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+            let quantity = parseInt(input.value);
+
+            if (action === 'increase') {
+                quantity += 1;
+            } else if (action === 'decrease' && quantity > 1) {
+                quantity -= 1;
+            }
+
+            if (quantity >= 1) {
+                updateCartItem(itemId, quantity);
+            }
+        });
+    });
+
+    // Remove item
+    document.querySelectorAll('.remove-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            if (confirm('Are you sure you want to remove this item from your cart?')) {
+                removeFromCart(itemId);
+            }
+        });
+    });
+
+    // Clear cart
+    document.querySelectorAll('.clear-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear your cart?')) {
+                clearCart();
+            }
+        });
+    });
+});
+
+// AJAX functions
+function updateCartItem(itemId, quantity) {
+    // چک اعتبار UUID (ساده)
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(itemId)) {
+        alert('Invalid item ID. Please refresh the page.');
+        return;
+    }
+
+    const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+    const prevQuantity = parseInt(input.value);
+    input.value = quantity;
+
+    const updateUrl = `/cart/item/${itemId}/update/`;
+
+    fetch(updateUrl, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ quantity: quantity })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            // Update total price in UI using server data
+            const itemTotal = document.querySelector(`.cart-item[data-item-id="${itemId}"] .total-price-item`);
+            if (itemTotal && data.total_price_item != null) {
+                itemTotal.textContent = `$${parseFloat(data.total_price_item).toFixed(2)}`;
+            }
+            
+            // Update order summary
+            updateOrderSummary(data.total_items, data.total_price);
+            
+            // Update button states
+            const decreaseBtn = document.querySelector(`.update-quantity[data-item-id="${itemId}"][data-action="decrease"]`);
+            if (quantity <= 1) {
+                decreaseBtn.disabled = true;
+            } else {
+                decreaseBtn.disabled = false;
+            }
+            
+            showNotification('Quantity updated', 'success');
+        } else {
+            alert(data.message || 'Error updating cart');
+            input.value = prevQuantity;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating cart item');
+        input.value = prevQuantity;
+    });
+}
+
+function removeFromCart(itemId) {
+    // چک اعتبار UUID
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(itemId)) {
+        alert('Invalid item ID. Please refresh the page.');
+        return;
+    }
+
+    // ساخت URL دستی
+    const deleteUrl = `/cart/item/${itemId}/delete/`;
+
+    fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            // Remove the item from DOM
+            const itemElement = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+            if (itemElement) {
+                itemElement.remove();
+            }
+            
+            // Update order summary
+            updateOrderSummary(data.total_items, data.total_price);
+            
+            showNotification('Item removed from cart', 'success');
+        } else {
+            alert(data.message || 'Error removing item');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error removing cart item');
+    });
+}
+
+// clearCart بدون تغییر – چون kwarg نداره
+function clearCart() {
+    fetch('{% url "cart:cart_clear" %}', {  // این OKه چون kwarg نداره
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    // بقیه کد بدون تغییر...
+}
+
+function updateOrderSummary(totalItems, totalPrice) {
+    const subtotalEl = document.querySelector('.subtotal');
+    const totalEl = document.querySelector('.total');
+    const itemCountEl = document.querySelector('.item-count');
+    
+    if (subtotalEl && totalPrice != null) {
+        subtotalEl.textContent = `$${parseFloat(totalPrice).toFixed(2)}`;
+    }
+    if (totalEl && totalPrice != null) {
+        totalEl.textContent = `$${parseFloat(totalPrice).toFixed(2)}`;
+    }
+    if (itemCountEl && totalItems != null) {
+        itemCountEl.textContent = `Subtotal (${totalItems} items)`;
+    }
+    
+    const clearBtn = document.querySelector('.clear-cart');
+    const emptyBtn = document.querySelector('.empty-cart-btn');
+    
+    if (totalItems === 0) {
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (emptyBtn) emptyBtn.style.display = 'block';
+    } else {
+        if (clearBtn) clearBtn.style.display = 'block';
+        if (emptyBtn) emptyBtn.style.display = 'none';
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <div class="d-flex">
+            <div class="flex-grow-1">
+                ${message}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock extra_js %}
+{% endblock content %}

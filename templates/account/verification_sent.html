@@ -1,0 +1,32 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}Verification Sent{% endblock %}
+
+{% block header_title %}Verification Sent{% endblock %}
+{% block header_subtitle %}Please check your email{% endblock %}
+
+{% block content %}
+<div class="alert alert-success">
+    <i class="fas fa-check-circle"></i>
+    We have sent you an email with a verification link. Please check your email and click the link to verify your email address.
+</div>
+
+<div style="text-align: center; margin: 2rem 0;">
+    <i class="fas fa-envelope-open-text" style="font-size: 4rem; color: var(--primary-color); opacity: 0.3;"></i>
+</div>
+
+<div style="text-align: center; color: #6b7280; margin-bottom: 2rem;">
+    <p>If you don't see the email in your inbox, please check your spam folder.</p>
+</div>
+
+<div style="text-align: center;">
+    <a href="{% url 'account_email' %}" class="btn-secondary">
+        <i class="fas fa-cog"></i> Manage Email Addresses
+    </a>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>Continue to <a href="{% url 'pages:home' %}">store homepage</a></p>
+{% endblock %}

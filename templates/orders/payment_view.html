@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment - Order #{{ order.order_number }}{% endblock title %}
+
+{% block content %}
+<div class="payment-container">
+    <!-- Progress Steps -->
+    <div class="checkout-progress mb-4">
+        <div class="progress-steps">
+            <div class="step completed">
+                <div class="step-number"><i class="fas fa-check"></i></div>
+                <div class="step-title">Shipping & Billing</div>
+            </div>
+            <div class="step active">
+                <div class="step-number">2</div>
+                <div class="step-title">Payment</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">Confirmation</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Payment Methods -->
+        <div class="col-lg-8">
+            <div class="payment-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-credit-card me-2"></i>Choose Payment Gateway</h4>
+                    <p class="text-muted">Select your preferred payment method to complete your order</p>
+                </div>
+
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
+                    <div class="payment-gateways">
+                        {% for gateway in payment_gateways %}
+                            <div class="gateway-option">
+                                <div class="gateway-card">
+                                    <div class="gateway-radio">
+                                        <input type="radio" name="gateway" value="{{ gateway.uid }}" id="gateway_{{ gateway.uid }}" class="form-check-input" {% if forloop.first %}checked{% endif %}>
+                                    </div>
+                                    <label for="gateway_{{ gateway.uid }}" class="gateway-label">
+                                        <div class="gateway-info">
+                                            {% if gateway.id == 'zarinpal' %}
+                                                <div class="gateway-logo">
+                                                    <i class="fas fa-credit-card gateway-icon text-success"></i>
+                                                </div>
+                                                <div class="gateway-details">
+                                                    <h6 class="gateway-name">ZarinPal</h6>
+                                                    <p class="gateway-desc">Secure online payment with all Iranian cards</p>
+                                                    <div class="gateway-features">
+                                                        <span class="feature-badge">Visa</span>
+                                                        <span class="feature-badge">Mastercard</span>
+                                                        <span class="feature-badge">Iranian Cards</span>
+                                                    </div>
+                                                </div>
+                                            {% elif gateway.id == 'mellat' %}
+                                                <div class="gateway-logo">
+                                                    <i class="fas fa-university gateway-icon text-primary"></i>
+                                                </div>
+                                                <div class="gateway-details">
+                                                    <h6 class="gateway-name">Mellat Bank</h6>
+                                                    <p class="gateway-desc">Direct payment through Mellat Bank</p>
+                                                    <div class="gateway-features">
+                                                        <span class="feature-badge">Bank Transfer</span>
+                                                        <span class="feature-badge">Internet Banking</span>
+                                                    </div>
+                                                </div>
+                                            {% elif gateway.id == 'parsian' %}
+                                                <div class="gateway-logo">
+                                                    <i class="fas fa-building gateway-icon text-warning"></i>
+                                                </div>
+                                                <div class="gateway-details">
+                                                    <h6 class="gateway-name">Parsian Bank</h6>
+                                                    <p class="gateway-desc">Secure payment through Parsian Bank gateway</p>
+                                                    <div class="gateway-features">
+                                                        <span class="feature-badge">Credit Card</span>
+                                                        <span class="feature-badge">Debit Card</span>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="gateway-security">
+                                                <i class="fas fa-shield-alt me-1"></i>
+                                                <small class="text-muted">SSL Encrypted</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="payment-actions mt-4">
+                        <button type="submit" class="btn btn-success btn-lg" id="proceedPaymentBtn">
+                            <i class="fas fa-lock me-2"></i>
+                            Proceed to Payment (${{ order.total_amount|floatformat:2 }})
+                        </button>
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Checkout
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Security Information -->
+                <div class="security-info mt-4">
+                    <div class="security-card">
+                        <div class="security-header">
+                            <h6><i class="fas fa-shield-alt me-2"></i>Your Payment is Secure</h6>
+                        </div>
+                        <div class="security-features">
+                            <div class="security-feature">
+                                <i class="fas fa-lock"></i>
+                                <span>256-bit SSL encryption</span>
+                            </div>
+                            <div class="security-feature">
+                                <i class="fas fa-eye-slash"></i>
+                                <span>We never store card details</span>
+                            </div>
+                            <div class="security-feature">
+                                <i class="fas fa-shield-check"></i>
+                                <span>PCI DSS compliant</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="payment-summary-card sticky-top">
+                <div class="card-header">
+                    <h5><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Order Details -->
+                    <div class="order-info mb-3">
+                        <div class="order-number">
+                            <strong>Order #{{ order.order_number }}</strong>
+                        </div>
+                        <div class="order-date text-muted">
+                            {{ order.order_date|date:"M d, Y g:i A" }}
+                        </div>
+                    </div>
+
+                    <!-- Items Summary -->
+                    <div class="items-summary mb-3">
+                        <h6>Items ({{ order.get_items_count }})</h6>
+                        <div class="items-list">
+                            {% for item in order.items.all|slice:":3" %}
+                                <div class="summary-item">
+                                    <span class="item-name">{{ item.product_name }}</span>
+                                    <span class="item-qty">x{{ item.quantity }}</span>
+                                    <span class="item-price">${{ item.total_price|floatformat:2 }}</span>
+                                </div>
+                            {% endfor %}
+                            {% if order.items.count > 3 %}
+                                <div class="more-items">
+                                    <small class="text-muted">+{{ order.items.count|add:"-3" }} more items</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Price Breakdown -->
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span>Subtotal:</span>
+                            <span>${{ order.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Tax:</span>
+                            <span>${{ order.tax_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Shipping:</span>
+                            <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                        </div>
+                        {% if order.discount_amount > 0 %}
+                            <div class="price-row discount">
+                                <span>Discount:</span>
+                                <span>-${{ order.discount_amount|floatformat:2 }}</span>
+                            </div>
+                        {% endif %}
+                        <hr>
+                        <div class="price-row total">
+                            <span><strong>Total:</strong></span>
+                            <span><strong>${{ order.total_amount|floatformat:2 }}</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Address -->
+                    <div class="shipping-address mt-3">
+                        <h6>Shipping Address</h6>
+                        <address class="text-muted">
+                            {{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}<br>
+                            {{ order.shipping_address.address }}<br>
+                            {{ order.shipping_address.city }}, {{ order.shipping_address.state }}<br>
+                            {{ order.shipping_address.postal_code }}
+                        </address>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="contact-info">
+                        <h6>Contact</h6>
+                        <p class="text-muted mb-1">{{ order.phone }}</p>
+                        <p class="text-muted">{{ order.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="help-section mt-4">
+                <div class="help-card">
+                    <h6><i class="fas fa-question-circle me-2"></i>Need Help?</h6>
+                    <p class="text-muted">Having trouble with payment? Contact our support team.</p>
+                    <div class="help-contacts">
+                        <div class="help-contact">
+                            <i class="fas fa-phone"></i>
+                            <span>+1 (555) 123-4567</span>
+                        </div>
+                        <div class="help-contact">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@store.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="processing-animation mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                </div>
+                <h5>Processing Your Payment</h5>
+                <p class="text-muted">Please wait while we redirect you to the payment gateway...</p>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</script>
+{% endblock content %}>
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show processing modal
+    const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+    processingModal.show();
+    
+    // Disable the submit button
+    const submitBtn = document.getElementById('proceedPaymentBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    // Submit the form after a short delay to show the modal
+    setTimeout(() => {
+        this.submit();
+    }, 1000);
+});
+
+// Gateway selection animation
+document.querySelectorAll('input[name="gateway"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        // Remove active class from all gateway cards
+        document.querySelectorAll('.gateway-card').forEach(function(card) {
+            card.classList.remove('active');
+        });
+        
+        // Add active class to selected gateway card
+        this.closest('.gateway-card').classList.add('active');
+    });
+});
+
+// Set initial active state
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('input[name="gateway"]:checked');
+    if (checkedRadio) {
+        checkedRadio.closest('.gateway-card').classList.add('active');
+    }
+});
+</script

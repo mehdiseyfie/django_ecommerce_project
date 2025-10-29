@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation - {{ order.order_number }}</title>
+    <style>
+        /* Email-safe CSS - Similar base styles as order confirmation */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .email-body {
+            padding: 30px 20px;
+        }
+        
+        .payment-info {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .payment-info h2 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-label {
+            color: #155724;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #155724;
+            font-weight: 600;
+        }
+        
+        .order-summary {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .order-summary h3 {
+            color: #343a40;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .summary-row.total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #28a745;
+            border-top: 2px solid #dee2e6;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        .receipt-section {
+            background-color: #f8f9fa;
+            border: 2px dashed #6c757d;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .receipt-section h3 {
+            color: #343a40;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-section p {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .security-notice {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .security-notice h4 {
+            color: #1976d2;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+        
+        .security-notice p {
+            color: #1976d2;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .next-steps {
+            background-color: #fff3cd;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .next-steps h3 {
+            color: #856404;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #856404;
+        }
+        
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 0 10px 10px 0;
+            font-size: 14px;
+        }
+        
+        .cta-button:hover {
+            background-color: #218838;
+        }
+        
+        .cta-button.secondary {
+            background-color: #007bff;
+        }
+        
+        .cta-button.secondary:hover {
+            background-color: #0056b3;
+        }
+        
+        .email-footer {
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .footer-content h4 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .footer-content p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #dee2e6, transparent);
+            margin: 20px 0;
+        }
+        
+        /* Mobile responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .email-header,
+            .email-body,
+            .email-footer {
+                padding: 20px 15px;
+            }
+            
+            .info-row,
+            .summary-row {
+                flex-direction: column;
+                text-align: left;
+            }
+            
+            .info-value {
+                margin-top: 2px;
+            }
+            
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+            
+            .success-icon {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Email Header -->
+        <div class="email-header">
+            <div class="success-icon">✅</div>
+            <h1>Payment Successful!</h1>
+            <p>Your payment has been processed successfully</p>
+        </div>
+        
+        <!-- Email Body -->
+        <div class="email-body">
+            <!-- Payment Information -->
+            <div class="payment-info">
+                <h2>Payment Confirmation</h2>
+                <div class="info-row">
+                    <span class="info-label">Order Number:</span>
+                    <span class="info-value">#{{ order.order_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Date:</span>
+                    <span class="info-value">{{ payment.completed_at|date:"F d, Y \a\t g:i A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Method:</span>
+                    <span class="info-value">{{ order.get_payment_method_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Amount Paid:</span>
+                    <span class="info-value">${{ payment.amount|floatformat:2 }}</span>
+                </div>
+                {% if payment.reference_number %}
+                    <div class="info-row">
+                        <span class="info-label">Reference Number:</span>
+                        <span class="info-value">{{ payment.reference_number }}</span>
+                    </div>
+                {% endif %}
+                {% if payment.transaction_id %}
+                    <div class="info-row">
+                        <span class="info-label">Transaction ID:</span>
+                        <span class="info-value">{{ payment.transaction_id }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3>Payment Breakdown</h3>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>${{ order.subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax:</span>
+                    <span>${{ order.tax_amount|floatformat:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Discount:</span>
+                        <span>-${{ order.discount_amount|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+                <div class="summary-row total">
+                    <span>Total Paid:</span>
+                    <span>${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Receipt Information -->
+            <div class="receipt-section">
+                <h3>📧 Digital Receipt</h3>
+                <p>This email serves as your payment receipt for tax and record-keeping purposes.</p>
+                <p><strong>Keep this email for your records</strong></p>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <h4>🔒 Security Notice</h4>
+                <p>Your payment was processed securely. We never store your complete payment details on our servers.</p>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h3>What Happens Next?</h3>
+                <ul>
+                    <li><strong>Order Processing:</strong> Your order is now being prepared for shipment</li>
+                    <li><strong>Shipping Notification:</strong> You'll receive tracking information within 1-2 business days</li>
+                    <li><strong>Delivery:</strong> Your order will arrive within 3-5 business days</li>
+                    <li><strong>Invoice:</strong> A detailed invoice is now available in your account</li>
+                </ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Call to Action -->
+            <div class="cta-section">
+                <a href="{% url 'orders:order_detail' order.pk %}" class="cta-button">View Order Details</a>
+                <a href="{% url 'orders:order_invoice' order.uid %}" class="cta-button secondary">Download Invoice</a>
+            </div>
+
+            <!-- Refund Policy -->
+            <div style="background-color: #f8f9fa; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 10px 0; color: #343a40; font-size: 16px;">💡 Refund Policy</h4>
+                <p style="margin: 0; color: #6c757d; font-size: 14px;">
+                    If you need to return your order, you can request a refund within 30 days of delivery. 
+                    Refunds are processed within 5-7 business days after we receive your return.
+                </p>
+            </div>
+
+            <!-- Customer Service -->
+            <div style="background-color: #e8f5e8; border-radius: 6px; padding: 20px; text-align: center;">
+                <h4 style="margin: 0 0 15px 0; color: #155724; font-size: 18px;">Questions About Your Payment?</h4>
+                <p style="margin: 0 0 10px 0; color: #155724;">Our customer service team is here to help with any payment-related questions.</p>
+                <p style="margin: 0; color: #155724;">
+                    <strong>Email:</strong> billing@shilatabi.com | 
+                    <strong>Phone:</strong> (555) 123-4567
+                </p>
+            </div>
+        </div>
+
+        <!-- Email Footer -->
+        <div class="email-footer">
+            <div class="footer-content">
+                <h4>Thank You for Your Business!</h4>
+                <p>ShilaTabi Store</p>
+                <p>123 Commerce Street, Business District, City 12345</p>
+                <p>Phone: (555) 123-4567 | Email: info@shilatabi.com</p>
+                
+                <div style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
+                    <p>You received this email as a payment confirmation for your order.</p>
+                    <p>© 2024 ShilaTabi Store. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

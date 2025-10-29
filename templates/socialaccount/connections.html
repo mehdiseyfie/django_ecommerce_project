@@ -1,0 +1,107 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}Social Account Connections{% endblock %}
+
+{% block header_title %}Social Connections{% endblock %}
+{% block header_subtitle %}Manage your social account connections{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning">
+    <i class="fas fa-info-circle"></i>
+    You can connect or disconnect social accounts to make signing in easier.
+</div>
+
+{% if form.accounts %}
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Connected Accounts</h3>
+        <form method="post" action="{% url 'socialaccount_connections' %}">
+            {% csrf_token %}
+            
+            <fieldset>
+                {% for base_account in form.accounts %}
+                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: between; align-items: center;">
+                            <div style="flex: 1;">
+                                <label for="{{ base_account.id }}">
+                                    {% if base_account.choice.instance.provider == 'google' %}
+                                        <i class="fab fa-google" style="color: #db4437; margin-right: 0.5rem;"></i>
+                                    {% elif base_account.choice.instance.provider == 'facebook' %}
+                                        <i class="fab fa-facebook" style="color: #4267B2; margin-right: 0.5rem;"></i>
+                                    {% elif base_account.choice.instance.provider == 'github' %}
+                                        <i class="fab fa-github" style="color: #333; margin-right: 0.5rem;"></i>
+                                    {% else %}
+                                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                                    {% endif %}
+                                    <strong>{{ base_account.choice.instance.provider|title }}</strong>
+                                    <span style="color: #6b7280; margin-left: 0.5rem;">
+                                        {{ base_account.choice.instance.get_profile_url }}
+                                    </span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="account" value="{{ base_account.choice.instance.id }}" id="{{ base_account.id }}">
+                                <label for="{{ base_account.id }}" style="color: var(--error-color); margin-left: 0.5rem;">
+                                    <i class="fas fa-unlink"></i> Disconnect
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-unlink"></i> Remove Selected
+            </button>
+        </form>
+    </div>
+{% else %}
+    <div style="text-align: center; margin: 2rem 0;">
+        <i class="fas fa-plug" style="font-size: 4rem; color: var(--primary-color); opacity: 0.3;"></i>
+        <p style="color: #6b7280; margin-top: 1rem;">No social accounts connected yet.</p>
+    </div>
+{% endif %}
+
+<div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+    <h3 style="margin-bottom: 1rem;">Add Connection</h3>
+    <p style="color: #6b7280; margin-bottom: 1rem;">Connect a social account to make signing in easier.</p>
+    
+    <div class="social-login">
+        {% load socialaccount %}
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}
+            {% if provider.id == "google" %}
+                <a href="{% provider_login_url provider.id %}" class="social-btn">
+                    <i class="fab fa-google" style="color: #db4437;"></i>
+                    Connect with Google
+                </a>
+            {% elif provider.id == "facebook" %}
+                <a href="{% provider_login_url provider.id %}" class="social-btn">
+                    <i class="fab fa-facebook" style="color: #4267B2;"></i>
+                    Connect with Facebook
+                </a>
+            {% elif provider.id == "github" %}
+                <a href="{% provider_login_url provider.id %}" class="social-btn">
+                    <i class="fab fa-github" style="color: #333;"></i>
+                    Connect with GitHub
+                </a>
+            {% else %}
+                <a href="{% provider_login_url provider.id %}" class="social-btn">
+                    <i class="fas fa-link"></i>
+                    Connect with {{ provider.name }}
+                </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'account_email' %}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Account Settings
+    </a>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>Go back to <a href="{% url 'pages:home' %}">store homepage</a></p>
+{% endblock %}

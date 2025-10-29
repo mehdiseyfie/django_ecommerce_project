@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Track Order #{{ order.order_number }}{% endblock title %}
+
+{% block content %}
+<div class="track-order-container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'pages:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Orders</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_detail' order.pk %}">Order #{{ order.order_number }}</a></li>
+            <li class="breadcrumb-item active">Track Order</li>
+        </ol>
+    </nav>
+
+    <!-- Order Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="track-header-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="track-title">
+                            <i class="fas fa-truck me-2"></i>
+                            Track Order #{{ order.order_number }}
+                        </h1>
+                        <div class="track-meta">
+                            <span class="me-4">
+                                <i class="fas fa-calendar me-1"></i>
+                                Ordered on {{ order.order_date|date:"M d, Y" }}
+                            </span>
+                            <span class="me-4">
+                                <i class="fas fa-box me-1"></i>
+                                {{ order.get_items_count }} items
+                            </span>
+                            <span>
+                                <i class="fas fa-dollar-sign me-1"></i>
+                                ${{ order.total_amount|floatformat:2 }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="current-status">
+                            <span class="status-label">Current Status:</span>
+                            <span class="badge badge-status-{{ order.status }} badge-lg">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        {% if shipping.tracking_number %}
+                            <div class="tracking-number mt-2">
+                                <span class="tracking-label">Tracking Number:</span>
+                                <span class="tracking-value">{{ shipping.tracking_number }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tracking Timeline -->
+        <div class="col-lg-8">
+            <div class="tracking-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-route me-2"></i>Order Progress</h4>
+                </div>
+                
+                <!-- Progress Steps -->
+                <div class="tracking-progress">
+                    {% for step in tracking_steps %}
+                        <div class="tracking-step {% if step.completed %}completed{% endif %} {% if forloop.last %}last{% endif %}">
+                            <div class="step-indicator">
+                                {% if step.completed %}
+                                    <i class="fas fa-check"></i>
+                                {% else %}
+                                    <div class="step-dot"></div>
+                                {% endif %}
+                            </div>
+                            <div class="step-content">
+                                <h6 class="step-title">{{ step.title }}</h6>
+                                {% if step.name == 'pending' and step.completed %}
+                                    <p class="step-desc">Your order has been placed and is being prepared</p>
+                                    <small class="step-time">{{ order.order_date|date:"M d, Y g:i A" }}</small>
+                                {% elif step.name == 'processing' and step.completed %}
+                                    <p class="step-desc">Your order is being processed and prepared for shipment</p>
+                                    {% if order.confirmed_at %}
+                                        <small class="step-time">{{ order.confirmed_at|date:"M d, Y g:i A" }}</small>
+                                    {% endif %}
+                                {% elif step.name == 'confirmed' and step.completed %}
+                                    <p class="step-desc">Your order has been confirmed and is ready for dispatch</p>
+                                    {% if order.confirmed_at %}
+                                        <small class="step-time">{{ order.confirmed_at|date:"M d, Y g:i A" }}</small>
+                                    {% endif %}
+                                {% elif step.name == 'shipped' and step.completed %}
+                                    <p class="step-desc">Your order has been shipped and is on its way</p>
+                                    {% if order.shipped_at %}
+                                        <small class="step-time">{{ order.shipped_at|date:"M d, Y g:i A" }}</small>
+                                    {% endif %}
+                                {% elif step.name == 'delivered' and step.completed %}
+                                    <p class="step-desc">Your order has been successfully delivered</p>
+                                    {% if order.delivered_at %}
+                                        <small class="step-time">{{ order.delivered_at|date:"M d, Y g:i A" }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="step-desc text-muted">Pending</p>
+                                {% endif %}
+                            </div>
+                            {% if not forloop.last %}
+                                <div class="step-line {% if step.completed and tracking_steps|slice:"forloop.counter0:"|first.completed %}completed{% endif %}"></div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Shipping Information -->
+                {% if shipping %}
+                    <div class="shipping-details mt-4">
+                        <div class="section-header">
+                            <h5><i class="fas fa-shipping-fast me-2"></i>Shipping Details</h5>
+                        </div>
+                        <div class="shipping-info-grid">
+                            {% if shipping.carrier %}
+                                <div class="shipping-info-item">
+                                    <i class="fas fa-truck shipping-icon"></i>
+                                    <div class="shipping-info-content">
+                                        <h6>Carrier</h6>
+                                        <p>{{ shipping.carrier }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if shipping.tracking_number %}
+                                <div class="shipping-info-item">
+                                    <i class="fas fa-barcode shipping-icon"></i>
+                                    <div class="shipping-info-content">
+                                        <h6>Tracking Number</h6>
+                                        <p>{{ shipping.tracking_number }}</p>
+                                        {% if shipping.tracking_url %}
+                                            <a href="{{ shipping.tracking_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-external-link-alt me-1"></i>Track on Carrier Site
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if shipping.estimated_delivery %}
+                                <div class="shipping-info-item">
+                                    <i class="fas fa-calendar-check shipping-icon"></i>
+                                    <div class="shipping-info-content">
+                                        <h6>Estimated Delivery</h6>
+                                        <p>{{ shipping.estimated_delivery|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if shipping.shipped_at %}
+                                <div class="shipping-info-item">
+                                    <i class="fas fa-clock shipping-icon"></i>
+                                    <div class="shipping-info-content">
+                                        <h6>Shipped At</h6>
+                                        <p>{{ shipping.shipped_at|date:"M d, Y g:i A" }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Status History -->
+                <div class="status-history mt-4">
+                    <div class="section-header">
+                        <h5><i class="fas fa-history me-2"></i>Status History</h5>
+                    </div>
+                    <div class="history-timeline">
+                        {% for history in status_history %}
+                            <div class="history-item">
+                                <div class="history-marker">
+                                    <i class="fas fa-circle"></i>
+                                </div>
+                                <div class="history-content">
+                                    <div class="history-header">
+                                        <h6 class="history-status">{{ history.get_status_display }}</h6>
+                                        <span class="history-time">{{ history.timestamp|date:"M d, Y g:i A" }}</span>
+                                    </div>
+                                    {% if history.notes %}
+                                        <p class="history-notes">{{ history.notes }}</p>
+                                    {% endif %}
+                                    {% if history.changed_by %}
+                                        <small class="history-user text-muted">
+                                            Updated by {{ history.changed_by.get_full_name|default:history.changed_by.username }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <!-- Order Items Summary -->
+            <div class="tracking-sidebar-section">
+                <div class="section-header">
+                    <h5><i class="fas fa-box me-2"></i>Order Items</h5>
+                </div>
+                <div class="items-summary">
+                    {% for item in order.items.all %}
+                        <div class="item-summary">
+                            <div class="item-image">
+                                {% if item.product_image %}
+                                    <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}" class="img-fluid">
+                                {% else %}
+                                    <div class="image-placeholder">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <h6 class="item-name">{{ item.product_name }}</h6>
+                                <div class="item-meta">
+                                    <span class="item-qty">Qty: {{ item.quantity }}</span>
+                                    <span class="item-price">${{ item.total_price|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Delivery Address -->
+            <div class="tracking-sidebar-section">
+                <div class="section-header">
+                    <h5><i class="fas fa-map-marker-alt me-2"></i>Delivery Address</h5>
+                </div>
+                <div class="delivery-address">
+                    <address>
+                        <strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong><br>
+                        {{ order.shipping_address.address }}<br>
+                        {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                        {{ order.shipping_address.country }}
+                    </address>
+                    <div class="contact-info">
+                        <p><i class="fas fa-phone me-2"></i>{{ order.phone }}</p>
+                        <p><i class="fas fa-envelope me-2"></i>{{ order.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="tracking-sidebar-section">
+                <div class="section-header">
+                    <h5><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="quick-actions">
+                    <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-eye me-2"></i>View Order Details
+                    </a>
+                    {% if order.payment_status == 'paid' %}
+                        <a href="{% url 'orders:order_invoice' order.uid %}" class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-file-invoice me-2"></i>Download Invoice
+                        </a>
+                    {% endif %}
+                    {% if order.can_be_cancelled %}
+                        <button type="button" class="btn btn-outline-danger w-100 mb-2" onclick="cancelOrder({{ order.uid }})">
+                            <i class="fas fa-times me-2"></i>Cancel Order
+                        </button>
+                    {% endif %}
+                    <a href="{% url 'orders:reorder' order.uid %}" class="btn btn-outline-success w-100">
+                        <i class="fas fa-redo me-2"></i>Reorder Items
+                    </a>
+                </div>
+            </div>
+
+            <!-- Help & Support -->
+            <div class="tracking-sidebar-section">
+                <div class="section-header">
+                    <h5><i class="fas fa-headset me-2"></i>Need Help?</h5>
+                </div>
+                <div class="help-content">
+                    <p class="text-muted">Have questions about your order? We're here to help!</p>
+                    <div class="help-contacts">
+                        <div class="help-contact">
+                            <i class="fas fa-phone text-primary"></i>
+                            <div>
+                                <strong>Call Us</strong>
+                                <p class="mb-0">+1 (555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="help-contact">
+                            <i class="fas fa-envelope text-primary"></i>
+                            <div>
+                                <strong>Email Support</strong>
+                                <p class="mb-0">support@store.com</p>
+                            </div>
+                        </div>
+                        <div class="help-contact">
+                            <i class="fas fa-comments text-primary"></i>
+                            <div>
+                                <strong>Live Chat</strong>
+                                <p class="mb-0">Available 24/7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order? This action cannot be undone.</p>
+                {% if order.payment_status == 'paid' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Since this order has been paid, a refund will be processed automatically.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
+                <form id="cancelOrderForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelOrder(orderId) {
+    const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+    const form = document.getElementById('cancelOrderForm');
+    form.action = '/orders/cancel/' + orderId + '/';
+    modal.show();
+}
+
+// Auto-refresh tracking information every 60 seconds
+setInterval(function() {
+    fetch('/orders/api/status/{{ order.uid }}/')
+        .then(response => response.json())
+        .then(data => {
+            // Update current status badge
+            const statusBadge = document.querySelector('.badge-status-{{ order.status }}');
+            if (statusBadge) {
+                statusBadge.textContent = data.status_display;
+                statusBadge.className = statusBadge.className.replace(/badge-status-\w+/, 'badge-status-' + data.status);
+            }
+            
+            // Update tracking number if available
+            if (data.tracking_number && !document.querySelector('.tracking-value')) {
+                location.reload(); // Reload to show updated tracking information
+            }
+        })
+        .catch(error => console.log('Status update failed:', error));
+}, 60000);
+</script>
+{% endblock content %}

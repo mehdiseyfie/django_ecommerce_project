@@ -1,0 +1,231 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block header_title %}Create Account{% endblock %}
+{% block header_subtitle %}Join thousands of satisfied customers{% endblock %}
+
+{% block content %}
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+<div class="social-login">
+    {% for provider in socialaccount_providers %}
+        {% if provider.id == "google" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-google" style="color: #db4437;"></i>
+                Continue with Google
+            </a>
+        {% elif provider.id == "facebook" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-facebook" style="color: #4267B2;"></i>
+                Continue with Facebook
+            </a>
+        {% elif provider.id == "github" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-github" style="color: #333;"></i>
+                Continue with GitHub
+            </a>
+        {% else %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fas fa-user-plus"></i>
+                Continue with {{ provider.name }}
+            </a>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="divider">
+    <span>Or create account with email</span>
+</div>
+{% endif %}
+
+<form method="post" action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="id_email" class="form-label">
+            <i class="fas fa-envelope"></i> Email Address
+        </label>
+        <input type="email" 
+               class="form-control" 
+               id="id_email" 
+               name="email" 
+               placeholder="Enter your email address"
+               value="{{ form.email.value|default:'' }}"
+               autocomplete="email"
+               required>
+        {% if form.email.errors %}
+            <ul class="errorlist">
+                {% for error in form.email.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="id_phone" class="form-label">
+            <i class="fas fa-phone"></i> Phone Number *
+        </label>
+        <input type="tel" 
+               class="form-control" 
+               id="id_phone" 
+               name="phone" 
+               placeholder="Enter your phone number (e.g., +1234567890)"
+               value="{{ form.phone.value|default:'' }}"
+               autocomplete="tel"
+               required>
+        {% if form.phone.errors %}
+            <ul class="errorlist">
+                {% for error in form.phone.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <div class="helptext">
+            Please include your country code (e.g., +1 for US, +44 for UK)
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-group-half">
+            <label for="id_first_name" class="form-label">
+                <i class="fas fa-user"></i> First Name
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="id_first_name" 
+                   name="first_name" 
+                   placeholder="Enter your first name"
+                   value="{{ form.first_name.value|default:'' }}"
+                   autocomplete="given-name"
+                   maxlength="150">
+            {% if form.first_name.errors %}
+                <ul class="errorlist">
+                    {% for error in form.first_name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div class="form-group form-group-half">
+            <label for="id_last_name" class="form-label">
+                <i class="fas fa-user"></i> Last Name
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="id_last_name" 
+                   name="last_name" 
+                   placeholder="Enter your last name"
+                   value="{{ form.last_name.value|default:'' }}"
+                   autocomplete="family-name"
+                   maxlength="150">
+            {% if form.last_name.errors %}
+                <ul class="errorlist">
+                    {% for error in form.last_name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="id_address" class="form-label">
+            <i class="fas fa-map-marker-alt"></i> Address
+        </label>
+        <textarea class="form-control" 
+                  id="id_address" 
+                  name="address" 
+                  placeholder="Enter your address (optional)"
+                  rows="3"
+                  autocomplete="street-address">{{ form.address.value|default:'' }}</textarea>
+        {% if form.address.errors %}
+            <ul class="errorlist">
+                {% for error in form.address.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="id_password1" class="form-label">
+            <i class="fas fa-lock"></i> Password
+        </label>
+        <input type="password" 
+               class="form-control" 
+               id="id_password1" 
+               name="password1" 
+               placeholder="Create a strong password (min 8 characters)"
+               autocomplete="new-password"
+               required>
+        {% if form.password1.errors %}
+            <ul class="errorlist">
+                {% for error in form.password1.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if form.password1.help_text %}
+            <div class="helptext">{{ form.password1.help_text }}</div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="id_password2" class="form-label">
+            <i class="fas fa-lock"></i> Confirm Password
+        </label>
+        <input type="password" 
+               class="form-control" 
+               id="id_password2" 
+               name="password2" 
+               placeholder="Confirm your password"
+               autocomplete="new-password"
+               required>
+        {% if form.password2.errors %}
+            <ul class="errorlist">
+                {% for error in form.password2.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+    {% endif %}
+    
+    <button type="submit" class="btn-primary">
+        <i class="fas fa-user-plus"></i> Create Account
+    </button>
+</form>
+
+<!-- Password Requirements Info -->
+<div class="password-requirements">
+    <h4>Password Requirements:</h4>
+    <ul>
+        <li>At least 8 characters long</li>
+        <li>Cannot be too similar to your email</li>
+        <li>Cannot be a commonly used password</li>
+        <li>Cannot be entirely numeric</li>
+    </ul>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<p>Already have an account? <a href="{% url 'account_login' %}">Sign in here</a></p>
+{% endblock %}

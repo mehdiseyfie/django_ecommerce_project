@@ -1,0 +1,11 @@
+{% block content %}
+    <h2>My Profile</h2>
+    <div>
+        <p><strong>Email:</strong> {{ profile.user.email }}</p>
+        <p><strong>First Name:</strong> {{ profile.user.first_name }}</p>
+        <p><strong>Last Name:</strong> {{ profile.user.last_name }}</p>
+        <p><strong>Phone:</strong> {{ profile.phone }}</p>
+        <p><strong>Address:</strong> {{ profile.address }}</p>
+        <!-- Add more fields as needed -->
+    </div>
+{% endblock %}

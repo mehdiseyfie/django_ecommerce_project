@@ -1,0 +1,116 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block header_title %}Welcome Back{% endblock %}
+{% block header_subtitle %}Sign in to your account to continue shopping{% endblock %}
+
+{% block content %}
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+<div class="social-login">
+    {% for provider in socialaccount_providers %}
+        {% if provider.id == "google" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-google" style="color: #db4437;"></i>
+                Continue with Google
+            </a>
+        {% elif provider.id == "facebook" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-facebook" style="color: #4267B2;"></i>
+                Continue with Facebook
+            </a>
+        {% elif provider.id == "github" %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fab fa-github" style="color: #333;"></i>
+                Continue with GitHub
+            </a>
+        {% else %}
+            <a href="{% provider_login_url provider.id %}" class="social-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                Continue with {{ provider.name }}
+            </a>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="divider">
+    <span>Or continue with email</span>
+</div>
+{% endif %}
+
+<form method="post" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="id_login" class="form-label">
+            <i class="fas fa-envelope"></i> Email Address
+        </label>
+        <input type="email" 
+               class="form-control" 
+               id="id_login" 
+               name="login" 
+               placeholder="Enter your email address"
+               value="{{ form.login.value|default:'' }}"
+               required>
+        {% if form.login.errors %}
+            <ul class="errorlist">
+                {% for error in form.login.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="id_password" class="form-label">
+            <i class="fas fa-lock"></i> Password
+        </label>
+        <input type="password" 
+               class="form-control" 
+               id="id_password" 
+               name="password" 
+               placeholder="Enter your password"
+               required>
+        {% if form.password.errors %}
+            <ul class="errorlist">
+                {% for error in form.password.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    <div class="remember-me">
+        <input type="checkbox" id="id_remember" name="remember">
+        <label for="id_remember">Remember me</label>
+    </div>
+    
+    <div class="forgot-password">
+        <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
+    </div>
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+    {% endif %}
+    
+    <button type="submit" class="btn-primary">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+</form>
+{% endblock %}
+
+{% block footer %}
+<p>Don't have an account? <a href="{% url 'account_signup' %}">Create one here</a></p>
+{% endblock %}

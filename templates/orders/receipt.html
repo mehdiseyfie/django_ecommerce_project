@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Receipt - Order #{{ order.order_number }}{% endblock title %}
+
+{% block content %}
+<div class="receipt-container">
+    <!-- Print Actions -->
+    <div class="receipt-actions mb-4 d-print-none">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>Print Receipt
+        </button>
+        <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Order
+        </a>
+    </div>
+
+    <!-- Receipt Content -->
+    <div class="receipt-content">
+        <!-- Receipt Header -->
+        <div class="receipt-header text-center">
+            <div class="store-logo mb-3">
+                <img src="{% static 'images/logo.png' %}" alt="Store Logo" class="logo">
+            </div>
+            <h2 class="store-name">ShilaTabi Store</h2>
+            <p class="store-address">
+                123 Commerce Street<br>
+                Business District, City 12345<br>
+                Phone: (555) 123-4567
+            </p>
+            <div class="receipt-title">
+                <h3>SALES RECEIPT</h3>
+            </div>
+        </div>
+
+        <!-- Transaction Info -->
+        <div class="transaction-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Receipt #:</span>
+                    <span class="info-value">RCP-{{ order.order_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Order #:</span>
+                    <span class="info-value">{{ order.order_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">{{ order.order_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Time:</span>
+                    <span class="info-value">{{ order.order_date|date:"g:i A" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Customer:</span>
+                    <span class="info-value">{{ order.customer.user.get_full_name|default:order.customer.user.username }}</span>
+                </div>
+                {% if payment %}
+                    <div class="info-item">
+                        <span class="info-label">Payment Method:</span>
+                        <span class="info-value">{{ order.get_payment_method_display }}</span>
+                    </div>
+                    {% if payment.reference_number %}
+                        <div class="info-item">
+                            <span class="info-label">Ref #:</span>
+                            <span class="info-value">{{ payment.reference_number }}</span>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Items Section -->
+        <div class="receipt-items">
+            <div class="items-header">
+                <h4>ITEMS PURCHASED</h4>
+            </div>
+            <div class="items-list">
+                {% for item in items %}
+                    <div class="receipt-item">
+                        <div class="item-row">
+                            <div class="item-name">{{ item.product_name }}</div>
+                            <div class="item-total">${{ item.total_price|floatformat:2 }}</div>
+                        </div>
+                        <div class="item-details">
+                            <span class="item-sku">SKU: {{ item.product_sku|default:"N/A" }}</span>
+                            <span class="item-qty">Qty: {{ item.quantity }}</span>
+                            <span class="item-price">@ ${{ item.unit_price|floatformat:2 }}</span>
+                        </div>
+                        {% if item.product_attributes %}
+                            <div class="item-attributes">
+                                {% for key, value in item.product_attributes.items %}
+                                    <small>{{ key }}: {{ value }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="receipt-totals">
+            <div class="totals-list">
+                <div class="total-item">
+                    <span class="total-label">Subtotal:</span>
+                    <span class="total-value">${{ order.subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="total-item">
+                    <span class="total-label">Tax:</span>
+                    <span class="total-value">${{ order.tax_amount|floatformat:2 }}</span>
+                </div>
+                <div class="total-item">
+                    <span class="total-label">Shipping:</span>
+                    <span class="total-value">${{ order.shipping_cost|floatformat:2 }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                    <div class="total-item discount">
+                        <span class="total-label">Discount:</span>
+                        <span class="total-value">-${{ order.discount_amount|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+                <div class="total-separator"></div>
+                <div class="total-item final">
+                    <span class="total-label">TOTAL PAID:</span>
+                    <span class="total-value">${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Details -->
+        {% if payment %}
+            <div class="payment-details">
+                <div class="payment-header">
+                    <h5>PAYMENT DETAILS</h5>
+                </div>
+                <div class="payment-info">
+                    <div class="payment-item">
+                        <span class="payment-label">Method:</span>
+                        <span class="payment-value">{{ order.get_payment_method_display }}</span>
+                    </div>
+                    <div class="payment-item">
+                        <span class="payment-label">Status:</span>
+                        <span class="payment-value status-success">{{ payment.get_status_display }}</span>
+                    </div>
+                    <div class="payment-item">
+                        <span class="payment-label">Amount:</span>
+                        <span class="payment-value">${{ payment.amount|floatformat:2 }}</span>
+                    </div>
+                    {% if payment.transaction_id %}
+                        <div class="payment-item">
+                            <span class="payment-label">Transaction ID:</span>
+                            <span class="payment-value">{{ payment.transaction_id }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="payment-item">
+                        <span class="payment-label">Date:</span>
+                        <span class="payment-value">{{ payment.completed_at|date:"M d, Y g:i A" }}</span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Shipping Information -->
+        <div class="shipping-details">
+            <div class="shipping-header">
+                <h5>SHIPPING ADDRESS</h5>
+            </div>
+            <div class="shipping-address">
+                <strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong><br>
+                {{ order.shipping_address.address }}<br>
+                {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                {{ order.shipping_address.country }}
+            </div>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ order.phone }}</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ order.email }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Policy -->
+        <div class="return-policy">
+            <div class="policy-header">
+                <h5>RETURN POLICY</h5>
+            </div>
+            <div class="policy-content">
+                <ul>
+                    <li>Items can be returned within 30 days of purchase</li>
+                    <li>Items must be in original condition with tags attached</li>
+                    <li>Return shipping costs are customer's responsibility</li>
+                    <li>Refunds will be processed within 5-7 business days</li>
+                    <li>This receipt is required for all returns and exchanges</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="receipt-footer">
+            <div class="footer-message text-center">
+                <h4>THANK YOU FOR YOUR PURCHASE!</h4>
+                <p>We appreciate your business and hope you enjoy your items.</p>
+                
+                <div class="customer-service">
+                    <p><strong>Questions or concerns?</strong></p>
+                    <p>Contact us at: support@shilatabi.com or (555) 123-4567</p>
+                    <p>Visit us online: www.shilatabi.com</p>
+                </div>
+
+                <div class="social-links">
+                    <p>Follow us:</p>
+                    <div class="social-icons">
+                        <i class="fab fa-facebook"></i>
+                        <i class="fab fa-twitter"></i>
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barcode -->
+            <div class="receipt-barcode text-center">
+                <div class="barcode-lines">
+                    <div class="barcode-container">
+                        <div class="barcode">
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                            <span class="barcode-line"></span>
+                        </div>
+                        <p class="barcode-number">{{ order.order_number }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Format receipt for printing
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+});
+</script>
+{% endblock content %}

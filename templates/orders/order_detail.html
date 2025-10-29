@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Order #{{ order.order_number }}{% endblock title %}
+
+{% block content %}
+<div class="order-detail-container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'pages:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Orders</a></li>
+            <li class="breadcrumb-item active">Order #{{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <!-- Order Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="order-header-card">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h1 class="order-title">
+                            <i class="fas fa-receipt me-2"></i>
+                            Order #{{ order.order_number }}
+                        </h1>
+                        <p class="order-meta">
+                            <span class="me-3">
+                                <i class="fas fa-calendar me-1"></i>
+                                Placed on {{ order.order_date|date:"F d, Y \a\t g:i A" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-shopping-cart me-1"></i>
+                                {{ order.get_items_count }} items
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="order-status-badges mb-2">
+                            <span class="badge badge-status-{{ order.status }} badge-lg">
+                                {{ order.get_status_display }}
+                            </span>
+                            <span class="badge badge-payment-{{ order.payment_status }} badge-lg">
+                                Payment: {{ order.get_payment_status_display }}
+                            </span>
+                        </div>
+                        <div class="order-total">
+                            <h3 class="total-amount">${{ order.total_amount|floatformat:2 }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="order-actions-card">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'orders:track_order' order.uid %}" class="btn btn-outline-primary">
+                        <i class="fas fa-truck me-1"></i>Track Order
+                    </a>
+                    {% if order.payment_status == 'paid' %}
+                        <a href="{% url 'orders:order_invoice' order.uid %}" class="btn btn-outline-info">
+                            <i class="fas fa-file-invoice me-1"></i>Download Invoice
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'orders:reorder' order.uid %}" class="btn btn-outline-success">
+                        <i class="fas fa-redo me-1"></i>Reorder
+                    </a>
+                    {% if can_cancel %}
+                        <button type="button" class="btn btn-outline-danger" onclick="cancelOrder({{ order.uid }})">
+                            <i class="fas fa-times me-1"></i>Cancel Order
+                        </button>
+                    {% endif %}
+                    {% if can_refund %}
+                        <button type="button" class="btn btn-outline-warning" onclick="requestRefund({{ order.uid }})">
+                            <i class="fas fa-undo me-1"></i>Request Refund
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Items -->
+        <div class="col-lg-8">
+            <div class="order-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-box me-2"></i>Order Items</h4>
+                </div>
+                <div class="items-list">
+                    {% for item in order_items %}
+                        <div class="order-item">
+                            <div class="item-image">
+                                {% if item.product_image %}
+                                    <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}" class="img-fluid">
+                                {% else %}
+                                    <div class="image-placeholder">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <h6 class="item-name">{{ item.product_name }}</h6>
+                                <p class="item-sku">SKU: {{ item.product_sku|default:"N/A" }}</p>
+                                {% if item.product_attributes %}
+                                    <div class="item-attributes">
+                                        {% for key, value in item.product_attributes.items %}
+                                            <span class="attribute">{{ key }}: {{ value }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="item-quantity">
+                                <span class="qty-label">Qty:</span>
+                                <span class="qty-value">{{ item.quantity }}</span>
+                            </div>
+                            <div class="item-price">
+                                <div class="unit-price">${{ item.unit_price|floatformat:2 }} each</div>
+                                <div class="total-price">${{ item.total_price|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="order-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-history me-2"></i>Order Timeline</h4>
+                </div>
+                <div class="timeline">
+                    {% for history in status_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                <i class="fas fa-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">{{ history.get_status_display }}</h6>
+                                <p class="timeline-time">{{ history.timestamp|date:"M d, Y g:i A" }}</p>
+                                {% if history.notes %}
+                                    <p class="timeline-notes">{{ history.notes }}</p>
+                                {% endif %}
+                                {% if history.changed_by %}
+                                    <p class="timeline-user">Updated by: {{ history.changed_by.get_full_name|default:history.changed_by.username }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="order-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-calculator me-2"></i>Order Summary</h4>
+                </div>
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>${{ order.subtotal|floatformat:2 }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax:</span>
+                        <span>${{ order.tax_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping:</span>
+                        <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                    </div>
+                    {% if order.discount_amount > 0 %}
+                        <div class="summary-row discount">
+                            <span>Discount:</span>
+                            <span>-${{ order.discount_amount|floatformat:2 }}</span>
+                        </div>
+                    {% endif %}
+                    <hr>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span>${{ order.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            <div class="order-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-truck me-2"></i>Shipping Information</h4>
+                </div>
+                <div class="shipping-info">
+                    <div class="shipping-address">
+                        <h6>Shipping Address</h6>
+                        <address>
+                            {{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}<br>
+                            {{ order.shipping_address.address }}<br>
+                            {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                            {{ order.shipping_address.country }}
+                        </address>
+                    </div>
+                    {% if shipping %}
+                        <div class="tracking-info">
+                            <h6>Tracking Information</h6>
+                            {% if shipping.tracking_number %}
+                                <p><strong>Tracking Number:</strong> {{ shipping.tracking_number }}</p>
+                            {% endif %}
+                            {% if shipping.carrier %}
+                                <p><strong>Carrier:</strong> {{ shipping.carrier }}</p>
+                            {% endif %}
+                            {% if shipping.estimated_delivery %}
+                                <p><strong>Estimated Delivery:</strong> {{ shipping.estimated_delivery|date:"M d, Y" }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="contact-info">
+                        <h6>Contact Information</h6>
+                        <p><strong>Phone:</strong> {{ order.phone }}</p>
+                        <p><strong>Email:</strong> {{ order.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="order-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-credit-card me-2"></i>Payment Information</h4>
+                </div>
+                <div class="payment-info">
+                    <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                    <p><strong>Payment Status:</strong> 
+                        <span class="badge badge-payment-{{ order.payment_status }}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </p>
+                    {% if payments %}
+                        <div class="payment-history">
+                            <h6>Payment History</h6>
+                            {% for payment in payments %}
+                                <div class="payment-item">
+                                    <div class="payment-details">
+                                        <span class="payment-amount">${{ payment.amount|floatformat:2 }}</span>
+                                        <span class="payment-status badge badge-payment-{{ payment.status }}">
+                                            {{ payment.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="payment-date">{{ payment.initiated_at|date:"M d, Y g:i A" }}</div>
+                                    {% if payment.reference_number %}
+                                        <div class="payment-ref">Ref: {{ payment.reference_number }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Customer Notes -->
+            {% if order.customer_notes %}
+                <div class="order-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-sticky-note me-2"></i>Customer Notes</h4>
+                    </div>
+                    <div class="customer-notes">
+                        <p>{{ order.customer_notes }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order? This action cannot be undone.</p>
+                {% if order.payment_status == 'paid' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Since this order has been paid, a refund will be processed automatically.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
+                <form id="cancelOrderForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Request Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="refundForm" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="refundReason" class="form-label">Reason for Refund</label>
+                        <textarea class="form-control" id="refundReason" name="reason" rows="3" required></textarea>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Refund requests will be reviewed within 3-5 business days.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Submit Refund Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelOrder(orderId) {
+    const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+    const form = document.getElementById('cancelOrderForm');
+    form.action = '/orders/cancel/' + orderId + '/';
+    modal.show();
+}
+
+function requestRefund(orderId) {
+    const modal = new bootstrap.Modal(document.getElementById('refundModal'));
+    const form = document.getElementById('refundForm');
+    form.action = '/orders/refund/' + orderId + '/';
+    modal.show();
+}
+
+// Auto-refresh order status every 30 seconds
+setInterval(function() {
+    fetch('/orders/api/status/{{ order.uid }}/')
+        .then(response => response.json())
+        .then(data => {
+            // Update status badges
+            const statusBadges = document.querySelectorAll('.badge-status-{{ order.status }}');
+            statusBadges.forEach(badge => {
+                badge.textContent = data.status_display;
+                badge.className = badge.className.replace(/badge-status-\w+/, 'badge-status-' + data.status);
+            });
+            
+            const paymentBadges = document.querySelectorAll('.badge-payment-{{ order.payment_status }}');
+            paymentBadges.forEach(badge => {
+                if (badge.textContent.startsWith('Payment:')) {
+                    badge.textContent = 'Payment: ' + data.payment_status_display;
+                } else {
+                    badge.textContent = data.payment_status_display;
+                }
+                badge.className = badge.className.replace(/badge-payment-\w+/, 'badge-payment-' + data.payment_status);
+            });
+        })
+        .catch(error => console.log('Status update failed:', error));
+}, 30000);
+</script>
+{% endblock content %}

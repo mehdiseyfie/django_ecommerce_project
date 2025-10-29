@@ -1,0 +1,39 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}Sign Out{% endblock %}
+
+{% block header_title %}Sign Out{% endblock %}
+{% block header_subtitle %}Are you sure you want to sign out?{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning">
+    <i class="fas fa-info-circle"></i>
+    You are about to sign out of your account. You will need to sign in again to access your account and continue shopping.
+</div>
+
+<div style="text-align: center; margin: 2rem 0;">
+    <i class="fas fa-sign-out-alt" style="font-size: 4rem; color: var(--primary-color); opacity: 0.3;"></i>
+</div>
+
+<form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+    {% endif %}
+    
+    <button type="submit" class="btn-primary">
+        <i class="fas fa-sign-out-alt"></i> Yes, Sign Out
+    </button>
+    
+    <div style="margin-top: 1rem;">
+        <a href="{% url 'pages:home' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block footer %}
+<p>Continue shopping at <a href="{% url 'pages:home' %}">store homepage</a></p>
+{% endblock %}

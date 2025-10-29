@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - {{ order.order_number }}</title>
+    <style>
+        /* Email-safe CSS */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .email-body {
+            padding: 30px 20px;
+        }
+        
+        .order-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .order-info h2 {
+            margin: 0 0 15px 0;
+            color: #343a40;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #343a40;
+            font-weight: 600;
+        }
+        
+        .order-items {
+            margin-bottom: 25px;
+        }
+        
+        .order-items h3 {
+            color: #343a40;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-right: 15px;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .item-meta {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .item-price {
+            text-align: right;
+            font-weight: 600;
+            color: #343a40;
+            font-size: 16px;
+        }
+        
+        .order-summary {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .order-summary h3 {
+            color: #343a40;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .summary-row.total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #343a40;
+            border-top: 2px solid #dee2e6;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        .shipping-info {
+            margin-bottom: 25px;
+        }
+        
+        .shipping-info h3 {
+            color: #343a40;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .address {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            font-style: normal;
+            line-height: 1.5;
+            color: #343a40;
+        }
+        
+        .next-steps {
+            background-color: #e3f2fd;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .next-steps h3 {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #343a40;
+        }
+        
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 0 10px 10px 0;
+            font-size: 14px;
+        }
+        
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .cta-button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .cta-button.secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .email-footer {
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .footer-content h4 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .footer-content p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .social-links {
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 20px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #dee2e6, transparent);
+            margin: 20px 0;
+        }
+        
+        /* Mobile responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .email-header,
+            .email-body,
+            .email-footer {
+                padding: 20px 15px;
+            }
+            
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+            
+            .item-image {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .item-price {
+                text-align: left;
+                margin-top: 5px;
+            }
+            
+            .info-row,
+            .summary-row {
+                flex-direction: column;
+                text-align: left;
+            }
+            
+            .info-value {
+                margin-top: 2px;
+            }
+            
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Email Header -->
+        <div class="email-header">
+            <h1>Order Confirmed!</h1>
+            <p>Thank you for your purchase. Your order is being processed.</p>
+        </div>
+        
+        <!-- Email Body -->
+        <div class="email-body">
+            <!-- Order Information -->
+            <div class="order-info">
+                <h2>Order Details</h2>
+                <div class="info-row">
+                    <span class="info-label">Order Number:</span>
+                    <span class="info-value">#{{ order.order_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Order Date:</span>
+                    <span class="info-value">{{ order.order_date|date:"F d, Y \a\t g:i A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Customer:</span>
+                    <span class="info-value">{{ customer.user.get_full_name|default:customer.user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ order.email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">{{ order.phone }}</span>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="order-items">
+                <h3>Items Ordered</h3>
+                {% for item in items %}
+                    <div class="item">
+                        <div class="item-image">
+                            {% if item.product_image %}
+                                <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}">
+                            {% else %}
+                                <span style="color: #6c757d; font-size: 12px;">📦</span>
+                            {% endif %}
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">{{ item.product_name }}</div>
+                            <div class="item-meta">
+                                SKU: {{ item.product_sku|default:"N/A" }} | Quantity: {{ item.quantity }}
+                                {% if item.product_attributes %}
+                                    <br>
+                                    {% for key, value in item.product_attributes.items %}
+                                        {{ key }}: {{ value }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="item-price">
+                            ${{ item.total_price|floatformat:2 }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3>Order Summary</h3>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>${{ order.subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax:</span>
+                    <span>${{ order.tax_amount|floatformat:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Discount:</span>
+                        <span>-${{ order.discount_amount|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span>${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            <div class="shipping-info">
+                <h3>Shipping Address</h3>
+                <address class="address">
+                    <strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong><br>
+                    {{ order.shipping_address.address }}<br>
+                    {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                    {{ order.shipping_address.country }}
+                </address>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                <ul>
+                    <li>We'll process your order within 1-2 business days</li>
+                    <li>You'll receive a shipping confirmation email with tracking information</li>
+                    <li>Your order will be delivered within 3-5 business days</li>
+                    <li>You can track your order status anytime using the link below</li>
+                </ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Call to Action -->
+            <div class="cta-section">
+                <a href="{% url 'orders:order_detail' order.pk %}" class="cta-button">View Order Details</a>
+                <a href="{% url 'orders:track_order' order.uid %}" class="cta-button secondary">Track Your Order</a>
+            </div>
+
+            <!-- Customer Notes -->
+            {% if order.customer_notes %}
+                <div style="background-color: #fff3cd; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 16px;">Your Note:</h4>
+                    <p style="margin: 0; color: #856404;">{{ order.customer_notes }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Contact Information -->
+            <div style="background-color: #e8f5e8; border-radius: 6px; padding: 20px; text-align: center;">
+                <h4 style="margin: 0 0 15px 0; color: #155724; font-size: 18px;">Need Help?</h4>
+                <p style="margin: 0 0 10px 0; color: #155724;">If you have any questions about your order, we're here to help!</p>
+                <p style="margin: 0; color: #155724;">
+                    <strong>Email:</strong> support@shilatabi.com | 
+                    <strong>Phone:</strong> (555) 123-4567
+                </p>
+            </div>
+        </div>
+
+        <!-- Email Footer -->
+        <div class="email-footer">
+            <div class="footer-content">
+                <h4>Thank You for Shopping with Us!</h4>
+                <p>ShilaTabi Store</p>
+                <p>123 Commerce Street, Business District, City 12345</p>
+                <p>Phone: (555) 123-4567 | Email: info@shilatabi.com</p>
+                
+                <div class="social-links">
+                    <a href="#" style="text-decoration: none;">📘</a>
+                    <a href="#" style="text-decoration: none;">🐦</a>
+                    <a href="#" style="text-decoration: none;">📷</a>
+                    <a href="#" style="text-decoration: none;">💼</a>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
+                    <p>You received this email because you placed an order with us.</p>
+                    <p>© 2024 ShilaTabi Store. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

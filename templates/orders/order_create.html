@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags custom_filters %}
+
+{% block title %}Create Order - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-shopping-cart"></i> Create Order</h3>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            {{ error }}
+                        </div>
+                    {% elif not cart or not cart.is_active or cart.total_items == 0 %}
+                        <div class="alert alert-warning">
+                            <h5>Your cart is empty</h5>
+                            <p>Please add items to your cart before creating an order.</p>
+                            <a href="/products/" class="btn btn-primary">
+                                <i class="fas fa-arrow-left"></i> Continue Shopping
+                            </a>
+                        </div>
+                    {% else %}
+                        <form method="post" id="orderForm">
+                            {% csrf_token %}
+                            <!-- Shipping Address Section -->
+                            <div class="form-section mb-4">
+                                <h5><i class="fas fa-truck"></i> Shipping Address</h5>
+                                <hr>
+                                {% if shipping_addresses %}
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Saved Address:</label>
+                                        <div class="row">
+                                            {% for address in shipping_addresses %}
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="card address-card {% if address.is_default %}border-primary{% endif %}" 
+                                                         style="cursor: pointer;" 
+                                                         onclick="selectAddress('{{ address.uid }}')">
+                                                        <div class="card-body p-3">
+                                                            {% if address.is_default %}
+                                                                <span class="badge bg-primary mb-2">Default</span>
+                                                            {% endif %}
+                                                            <h6>{{ address.first_name }} {{ address.last_name }}</h6>
+                                                            <small class="text-muted">
+                                                                {{ address.address_line_1 }}<br>
+                                                                {{ address.city }}, {{ address.state }}<br>
+                                                                {{ address.country }} - {{ address.postal_code }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="form-group">
+                                    <label for="{{ form.shipping_address.id_for_label }}">
+                                        {{ form.shipping_address.label }}
+                                    </label>
+                                    {{ form.shipping_address|as_crispy_field }}
+                                </div>
+                            </div>
+                            <!-- Billing Address Section -->
+                            <div class="form-section mb-4">
+                                <h5><i class="fas fa-credit-card"></i> Billing Address</h5>
+                                <hr>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="sameAsShipping">
+                                    <label class="form-check-label" for="sameAsShipping">
+                                        Same as shipping address
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ form.billing_address.id_for_label }}">
+                                        {{ form.billing_address.label }}
+                                    </label>
+                                    {{ form.billing_address|as_crispy_field }}
+                                </div>
+                            </div>
+                            <!-- Shipping Method Section -->
+                            <div class="form-section mb-4">
+                                <h5><i class="fas fa-shipping-fast"></i> Shipping Method</h5>
+                                <hr>
+                                <div class="form-group">
+                                    <label for="{{ form.shipping_method.id_for_label }}">
+                                        {{ form.shipping_method.label }}
+                                    </label>
+                                    {{ form.shipping_method|as_crispy_field }}
+                                </div>
+                            </div>
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                                    <i class="fas fa-credit-card"></i> Proceed to Payment
+                                    <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner"></span>
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            {% for item in cart.cartitems.all %}
+                            <tr>
+                                <td>
+                                    {{ item.product.name }}<br>
+                                    <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                </td>
+                                <td class="text-end">{{ item.get_total_price_item|floatformat:2 }} IRR</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Subtotal:</td>
+                                <td class="text-end">{{ cart.total_price|floatformat:2 }} IRR</td>
+                            </tr>
+                            <tr>
+                                <td>Shipping:</td>
+                                <td class="text-end">{{ 100000|floatformat:2 }} IRR</td>
+                            </tr>
+                            <tr>
+                                <td>Tax (9%):</td>
+                                <td class="text-end">{{ cart.total_price|multiply:0.09|floatformat:2 }} IRR</td>
+                            </tr>
+                            <tr>
+                                <td>Discount:</td>
+                                <td class="text-end">0.00 IRR</td>
+                            </tr>
+                            <tr class="border-top">
+                                <td><strong>Total:</strong></td>
+                                <td class="text-end total">
+                                    {% with tax=cart.total_price|multiply:0.09 %}
+                                    {{ cart.total_price|add:100000|add:tax|floatformat:2 }} IRR
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <p class="text-end text-muted">{{ cart.total_items }} item{{ cart.total_items|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Processing your order...</p>
+                <small class="text-muted">Please don't refresh the page</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.address-card:hover {
+    background-color: #f8f9fa;
+}
+.address-card.selected {
+    border-color: #0d6efd !important;
+    background-color: #e7f3ff;
+}
+.form-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('orderForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const sameAsShippingCheckbox = document.getElementById('sameAsShipping');
+    const shippingAddress = document.getElementById('{{ form.shipping_address.id_for_label }}');
+    const billingAddress = document.getElementById('{{ form.billing_address.id_for_label }}');
+
+    // Handle same as shipping checkbox
+    if (sameAsShippingCheckbox && shippingAddress && billingAddress) {
+        sameAsShippingCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                billingAddress.value = shippingAddress.value;
+                billingAddress.disabled = true;
+            } else {
+                billingAddress.disabled = false;
+            }
+        });
+    }
+
+    // Handle form submission
+    if (form && submitBtn && loadingSpinner) {
+        form.addEventListener('submit', function(e) {
+            submitBtn.disabled = true;
+            loadingSpinner.classList.remove('d-none');
+            try {
+                const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+                loadingModal.show();
+            } catch (e) {
+                console.log('Bootstrap modal not available');
+            }
+            setTimeout(function() {
+                if (submitBtn.disabled) {
+                    submitBtn.disabled = false;
+                    loadingSpinner.classList.add('d-none');
+                }
+            }, 30000);
+        });
+    }
+
+    // Function to select saved address
+    function selectAddress(addressId) {
+        if (!shippingAddress) return;
+        
+        // Update select field
+        shippingAddress.value = addressId;
+        
+        // Update selected card style
+        const addressCards = document.querySelectorAll('.address-card');
+        addressCards.forEach(card => card.classList.remove('selected'));
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('selected');
+        }
+        
+        // If same as shipping is checked, update billing
+        if (sameAsShippingCheckbox && sameAsShippingCheckbox.checked && billingAddress) {
+            billingAddress.value = addressId;
+        }
+    }
+});
+</script>
+{% endblock %}

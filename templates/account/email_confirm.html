@@ -1,0 +1,47 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}Confirm Email{% endblock %}
+
+{% block header_title %}Confirm Email{% endblock %}
+{% block header_subtitle %}Verify your email address{% endblock %}
+
+{% block content %}
+{% if confirmation %}
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle"></i>
+        Please confirm that <strong>{{ confirmation.email_address.email }}</strong> is an email address for user {{ confirmation.email_address.user.username }}.
+    </div>
+    
+    <div style="text-align: center; margin: 2rem 0;">
+        <i class="fas fa-envelope-open-text" style="font-size: 4rem; color: var(--primary-color); opacity: 0.3;"></i>
+    </div>
+    
+    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+        {% csrf_token %}
+        
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-check"></i> Confirm Email Address
+        </button>
+    </form>
+{% else %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        This email confirmation link is invalid or has already been used.
+    </div>
+    
+    <div style="text-align: center; margin: 2rem 0;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: var(--error-color); opacity: 0.3;"></i>
+    </div>
+    
+    <div style="text-align: center;">
+        <a href="{% url 'account_login' %}" class="btn-primary">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+<p>Go back to <a href="{% url 'pages:home' %}">store homepage</a></p>
+{% endblock %}

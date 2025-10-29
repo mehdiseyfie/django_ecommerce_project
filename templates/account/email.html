@@ -1,0 +1,106 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}Email Addresses{% endblock %}
+
+{% block header_title %}Email Addresses{% endblock %}
+{% block header_subtitle %}Manage your email addresses{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning">
+    <i class="fas fa-info-circle"></i>
+    The following email addresses are associated with your account:
+</div>
+
+<div style="margin-bottom: 2rem;">
+    {% for emailaddress in user.emailaddress_set.all %}
+        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: between; align-items: center;">
+                <div style="flex: 1;">
+                    <strong>{{ emailaddress.email }}</strong>
+                    {% if emailaddress.verified %}
+                        <span style="color: var(--success-color); font-size: 0.9rem; margin-left: 0.5rem;">
+                            <i class="fas fa-check-circle"></i> Verified
+                        </span>
+                    {% else %}
+                        <span style="color: var(--warning-color); font-size: 0.9rem; margin-left: 0.5rem;">
+                            <i class="fas fa-exclamation-triangle"></i> Unverified
+                        </span>
+                    {% endif %}
+                    {% if emailaddress.primary %}
+                        <span style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.8rem; margin-left: 0.5rem;">
+                            Primary
+                        </span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    {% if not emailaddress.verified %}
+                        <form method="post" action="{% url 'account_confirm_email' emailaddress.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+                                <i class="fas fa-paper-plane"></i> Resend Verification
+                            </button>
+                        </form>
+                    {% endif %}
+                    {% if not emailaddress.primary %}
+                        <form method="post" action="{% url 'account_email' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_primary" value="{{ emailaddress.id }}">
+                            <button type="submit" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+                                <i class="fas fa-star"></i> Make Primary
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'account_email' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_remove" value="{{ emailaddress.id }}">
+                            <button type="submit" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; color: var(--error-color);">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+    <h3 style="margin-bottom: 1rem;">Add Email Address</h3>
+    <form method="post" action="{% url 'account_email' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_email" class="form-label">
+                <i class="fas fa-envelope"></i> Email Address
+            </label>
+            <input type="email" 
+                   class="form-control" 
+                   id="id_email" 
+                   name="email" 
+                   placeholder="Enter new email address"
+                   required>
+            {% if form.email.errors %}
+                <ul class="errorlist">
+                    {% for error in form.email.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-plus"></i> Add Email
+        </button>
+    </form>
+</div>
+
+<div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'account_change_password' %}" class="btn-secondary">
+        <i class="fas fa-key"></i> Change Password
+    </a>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>Go back to <a href="{% url 'pages:home' %}">store homepage</a></p>
+{% endblock %}

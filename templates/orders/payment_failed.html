@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Payment Failed{% if order %} - Order #{{ order.uid }}{% endif %}{% endblock title %}
+
+{% block content %}
+<div class="payment-failed-container">
+    <!-- Progress Steps -->
+    <div class="checkout-progress mb-4">
+        <div class="progress-steps">
+            <div class="step completed">
+                <div class="step-number"><i class="fas fa-check"></i></div>
+                <div class="step-title">Shipping & Billing</div>
+            </div>
+            <div class="step failed">
+                <div class="step-number"><i class="fas fa-times"></i></div>
+                <div class="step-title">Payment</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">Confirmation</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Failed Message -->
+            <div class="failed-card">
+                <div class="failed-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="failed-content">
+                    <h1 class="failed-title">Payment Failed!</h1>
+                    <p class="failed-message">
+                        We're sorry, but your payment could not be processed.
+                        {% if order %}
+                            Your order has been saved and you can try again with a different payment method.
+                        {% else %}
+                            Please try again or contact support.
+                        {% endif %}
+                    </p>
+                    
+                    {% if order %}
+                        <div class="order-info">
+                            <div class="info-item">
+                                <span class="label">Order Number:</span>
+                                <span class="value">#{{ order.uid }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Order Date:</span>
+                                <span class="value">{{ order.created_at|date:"F d, Y \a\t g:i A" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Amount:</span>
+                                <span class="value amount">${{ order.get_total_amount|floatformat:2 }}</span>
+                            </div>
+                            {% if payment %}
+                                <div class="info-item">
+                                    <span class="label">Payment Status:</span>
+                                    <span class="value status-failed">{{ payment.get_status_display }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="failed-actions">
+                            <a href="{% url 'orders:payment' order.uid %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-redo me-2"></i>Try Payment Again
+                            </a>
+                            <a href="{% url 'orders:order_detail' order_id=order.uid %}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-eye me-2"></i>View Order Details
+                            </a>
+                            <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-home me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="failed-actions">
+                            <a href="{% url 'orders:order_create' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Create New Order
+                            </a>
+                            <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-home me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Common Payment Issues -->
+            <div class="help-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-question-circle me-2"></i>Common Payment Issues</h4>
+                </div>
+                <div class="help-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="help-item">
+                                <div class="help-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="help-text">
+                                    <h6>Insufficient Funds</h6>
+                                    <p>Make sure your card has sufficient balance for this transaction.</p>
+                                </div>
+                            </div>
+                            <div class="help-item">
+                                <div class="help-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="help-text">
+                                    <h6>Bank Security</h6>
+                                    <p>Your bank may have blocked the transaction for security reasons.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="help-item">
+                                <div class="help-icon">
+                                    <i class="fas fa-calendar-times"></i>
+                                </div>
+                                <div class="help-text">
+                                    <h6>Expired Card</h6>
+                                    <p>Check if your card has expired or the details entered are incorrect.</p>
+                                </div>
+                            </div>
+                            <div class="help-item">
+                                <div class="help-icon">
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <div class="help-text">
+                                    <h6>Connection Issues</h6>
+                                    <p>Temporary network issues may have interrupted the payment process.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Payment Methods -->
+            <div class="alternatives-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-credit-card me-2"></i>Try Alternative Payment Methods</h4>
+                </div>
+                <div class="alternatives-content">
+                    <div class="payment-alternatives">
+                        <div class="alternative-method">
+                            <div class="method-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="method-info">
+                                <h6>Cash on Delivery</h6>
+                                <p>Pay when your order is delivered to your door</p>
+                                <a href="{% url 'orders:order_create' %}" class="btn btn-outline-primary btn-sm">Select COD</a>
+                            </div>
+                        </div>
+                        {% if order %}
+                            <div class="alternative-method">
+                                <div class="method-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Bank Transfer</h6>
+                                    <p>Transfer money directly from your bank account</p>
+                                    <a href="{% url 'orders:payment' order.uid %}" class="btn btn-outline-primary btn-sm">Try Bank Transfer</a>
+                                </div>
+                            </div>
+                            <div class="alternative-method">
+                                <div class="method-icon">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Digital Wallet</h6>
+                                    <p>Use your digital wallet balance for quick payment</p>
+                                    <a href="{% url 'orders:payment' order.uid %}" class="btn btn-outline-primary btn-sm">Use Wallet</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="support-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-headset me-2"></i>Need Additional Help?</h4>
+                </div>
+                <div class="support-content">
+                    <p class="support-message">
+                        If you continue to experience payment issues, our customer support team is ready to assist you.
+                    </p>
+                    <div class="support-contacts">
+                        <div class="support-contact">
+                            <i class="fas fa-phone"></i>
+                            <div class="contact-info">
+                                <strong>Phone Support</strong>
+                                <p>+1 (555) 123-4567</p>
+                                <small>Mon-Fri 9AM-6PM</small>
+                            </div>
+                        </div>
+                        <div class="support-contact">
+                            <i class="fas fa-envelope"></i>
+                            <div class="contact-info">
+                                <strong>Email Support</strong>
+                                <p>support@store.com</p>
+                                <small>24/7 Support</small>
+                            </div>
+                        </div>
+                        <div class="support-contact">
+                            <i class="fas fa-comments"></i>
+                            <div class="contact-info">
+                                <strong>Live Chat</strong>
+                                <p>Available on website</p>
+                                <small>Instant assistance</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-redirect to payment page after 30 seconds (optional)
+{% if order %}
+setTimeout(function() {
+    const redirectBtn = document.querySelector('.btn-primary');
+    if (redirectBtn && confirm('Would you like to try payment again?')) {
+        window.location.href = redirectBtn.href;
+    }
+}, 30000);
+{% endif %}
+</script>
+{% endblock content %}

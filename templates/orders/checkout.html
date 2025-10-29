@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Checkout{% endblock title %}
+
+{% block content %}
+<div class="checkout-container">
+    <!-- Progress Steps -->
+    <div class="checkout-progress mb-4">
+        <div class="progress-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-title">Shipping & Billing</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">Payment</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">Confirmation</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="checkout-form" id="checkoutForm">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Left Column - Forms -->
+            <div class="col-lg-8">
+                <!-- Shipping Information -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-truck me-2"></i>Shipping Information</h4>
+                    </div>
+                    <div class="section-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shipping_first_name.id_for_label }}" class="form-label">First Name *</label>
+                                {{ form.shipping_first_name }}
+                                {% if form.shipping_first_name.errors %}
+                                    <div class="text-danger small">{{ form.shipping_first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shipping_last_name.id_for_label }}" class="form-label">Last Name *</label>
+                                {{ form.shipping_last_name }}
+                                {% if form.shipping_last_name.errors %}
+                                    <div class="text-danger small">{{ form.shipping_last_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.shipping_address.id_for_label }}" class="form-label">Address *</label>
+                            {{ form.shipping_address }}
+                            {% if form.shipping_address.errors %}
+                                <div class="text-danger small">{{ form.shipping_address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shipping_city.id_for_label }}" class="form-label">City *</label>
+                                {{ form.shipping_city }}
+                                {% if form.shipping_city.errors %}
+                                    <div class="text-danger small">{{ form.shipping_city.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shipping_state.id_for_label }}" class="form-label">State *</label>
+                                {{ form.shipping_state }}
+                                {% if form.shipping_state.errors %}
+                                    <div class="text-danger small">{{ form.shipping_state.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.shipping_postal_code.id_for_label }}" class="form-label">Postal Code *</label>
+                            {{ form.shipping_postal_code }}
+                            {% if form.shipping_postal_code.errors %}
+                                <div class="text-danger small">{{ form.shipping_postal_code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-phone me-2"></i>Contact Information</h4>
+                    </div>
+                    <div class="section-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">Phone Number *</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Information -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-credit-card me-2"></i>Billing Information</h4>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-check mb-3">
+                            {{ form.use_different_billing }}
+                            <label class="form-check-label" for="{{ form.use_different_billing.id_for_label }}">
+                                Use a different billing address
+                            </label>
+                        </div>
+                        
+                        <div id="billingSection" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.billing_first_name.id_for_label }}" class="form-label">First Name</label>
+                                    {{ form.billing_first_name }}
+                                    {% if form.billing_first_name.errors %}
+                                        <div class="text-danger small">{{ form.billing_first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.billing_last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    {{ form.billing_last_name }}
+                                    {% if form.billing_last_name.errors %}
+                                        <div class="text-danger small">{{ form.billing_last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.billing_address.id_for_label }}" class="form-label">Address</label>
+                                {{ form.billing_address }}
+                                {% if form.billing_address.errors %}
+                                    <div class="text-danger small">{{ form.billing_address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.billing_city.id_for_label }}" class="form-label">City</label>
+                                    {{ form.billing_city }}
+                                    {% if form.billing_city.errors %}
+                                        <div class="text-danger small">{{ form.billing_city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.billing_state.id_for_label }}" class="form-label">State</label>
+                                    {{ form.billing_state }}
+                                    {% if form.billing_state.errors %}
+                                        <div class="text-danger small">{{ form.billing_state.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.billing_postal_code.id_for_label }}" class="form-label">Postal Code</label>
+                                {{ form.billing_postal_code }}
+                                {% if form.billing_postal_code.errors %}
+                                    <div class="text-danger small">{{ form.billing_postal_code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-money-check-alt me-2"></i>Payment Method</h4>
+                    </div>
+                    <div class="section-body">
+                        <div class="payment-methods">
+                            {% for choice in form.payment_method %}
+                                <div class="payment-option">
+                                    <div class="payment-radio">
+                                        {{ choice.tag }}
+                                        <label for="{{ choice.id_for_label }}" class="payment-label">
+                                            <div class="payment-info">
+                                                {% if choice.choice_value == 'online' %}
+                                                    <i class="fas fa-credit-card payment-icon"></i>
+                                                    <div class="payment-details">
+                                                        <div class="payment-title">Online Payment</div>
+                                                        <div class="payment-desc">Pay securely with credit card or digital wallet</div>
+                                                    </div>
+                                                {% elif choice.choice_value == 'cash_on_delivery' %}
+                                                    <i class="fas fa-money-bill-wave payment-icon"></i>
+                                                    <div class="payment-details">
+                                                        <div class="payment-title">Cash on Delivery</div>
+                                                        <div class="payment-desc">Pay when you receive your order</div>
+                                                    </div>
+                                                {% elif choice.choice_value == 'bank_transfer' %}
+                                                    <i class="fas fa-university payment-icon"></i>
+                                                    <div class="payment-details">
+                                                        <div class="payment-title">Bank Transfer</div>
+                                                        <div class="payment-desc">Transfer directly to our bank account</div>
+                                                    </div>
+                                                {% elif choice.choice_value == 'wallet' %}
+                                                    <i class="fas fa-wallet payment-icon"></i>
+                                                    <div class="payment-details">
+                                                        <div class="payment-title">Wallet</div>
+                                                        <div class="payment-desc">Pay using your wallet balance</div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.payment_method.errors %}
+                            <div class="text-danger small">{{ form.payment_method.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Customer Notes -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h4><i class="fas fa-sticky-note me-2"></i>Order Notes (Optional)</h4>
+                    </div>
+                    <div class="section-body">
+                        {{ form.customer_notes }}
+                        <small class="form-text text-muted">Any special instructions for your order</small>
+                        {% if form.customer_notes.errors %}
+                            <div class="text-danger small">{{ form.customer_notes.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="col-lg-4">
+                <div class="order-summary-card sticky-top">
+                    <div class="card-header">
+                        <h5><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Cart Items -->
+                        <div class="cart-items mb-3">
+                            {% for item in cart_items %}
+                                <div class="cart-item">
+                                    <div class="item-image">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid">
+                                        {% else %}
+                                            <div class="image-placeholder">
+                                                <i class="fas fa-box"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-details">
+                                        <h6 class="item-name">{{ item.product.name }}</h6>
+                                        <div class="item-meta">
+                                            <span class="item-qty">Qty: {{ item.quantity }}</span>
+                                            <span class="item-price">${{ item.get_total_price|floatformat:2 }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Price Breakdown -->
+                        <div class="price-breakdown">
+                            <div class="price-row">
+                                <span>Subtotal ({{ cart.get_total_items }} items):</span>
+                                <span>${{ subtotal|floatformat:2 }}</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Tax:</span>
+                                <span>${{ tax_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Shipping:</span>
+                                <span>${{ shipping_cost|floatformat:2 }}</span>
+                            </div>
+                            <hr>
+                            <div class="price-row total">
+                                <span><strong>Total:</strong></span>
+                                <span><strong>${{ total_amount|floatformat:2 }}</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <div class="checkout-actions mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="placeOrderBtn">
+                                <i class="fas fa-lock me-2"></i>Place Order
+                            </button>
+                            <div class="security-note mt-2">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                <small class="text-muted">Your payment information is secure and encrypted</small>
+                            </div>
+                        </div>
+
+                        <!-- Return to Cart -->
+                        <div class="text-center mt-3">
+                            <a href="{% url 'cart:cart_view' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Return to Cart
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trust Badges -->
+                <div class="trust-badges mt-4">
+                    <div class="trust-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure Checkout</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-truck"></i>
+                        <span>Fast Delivery</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-undo"></i>
+                        <span>Easy Returns</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Toggle billing address section
+document.getElementById('{{ form.use_different_billing.id_for_label }}').addEventListener('change', function() {
+    const billingSection = document.getElementById('billingSection');
+    if (this.checked) {
+        billingSection.style.display = 'block';
+    } else {
+        billingSection.style.display = 'none';
+    }
+});
+
+// Form validation
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('placeOrderBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+});
+
+// Add form classes for styling
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Bootstrap classes to form fields
+    const formControls = document.querySelectorAll('input[type="text"], input[type="email"], textarea, select');
+    formControls.forEach(function(field) {
+        field.classList.add('form-control');
+    });
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(function(field) {
+        field.classList.add('form-check-input');
+    });
+
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(function(field) {
+        field.classList.add('form-check-input');
+    });
+});
+</script>
+{% endblock content %}

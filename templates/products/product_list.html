@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Category Filter Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Categories</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item {% if not category %}active{% endif %}">
+                        <a href="{% url 'products:product_list' %}" class="text-decoration-none">
+                            All Products
+                        </a>
+                    </li>
+                    {% for cat in categories %}
+                    <li class="list-group-item {% if category.slug == cat.slug %}active{% endif %}">
+                        <a href="{% url 'products:category' cat.slug %}" class="text-decoration-none">
+                            {{ cat.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Product Grid -->
+        <div class="col-md-9">
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            {% if product.product_images.first %}
+                                <img src="{{ product.product_images.first.image.url }}" 
+                                     class="card-img-top" 
+                                     alt="{{ product.name }}"
+                                     style="height: 250px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 250px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text text-muted">{{ product.product_description|truncatewords:15 }}</p>
+                                <div class="mb-2">
+                                    {% if product.get_product_discounted_price and product.get_product_discounted_price != product.price %}
+                                        <span class="text-decoration-line-through">${{ product.price }}</span>
+                                        <span class="text-danger ms-2">${{ product.get_product_discounted_price }}</span>
+                                    {% else %}
+                                        <span>${{ product.price }}</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'products:profile_detail' product.slug %}" class="btn btn-outline-primary w-100">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <p>No products found.</p>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if is_paginated %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }}</span>
+                        </li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: new URLSearchParams({ quantity: 1 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Added to cart!');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

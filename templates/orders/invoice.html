@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Invoice - Order #{{ order.order_number }}{% endblock title %}
+
+{% block content %}
+<div class="invoice-container">
+    <!-- Print Button -->
+    <div class="invoice-actions mb-4 d-print-none">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>Print Invoice
+        </button>
+        <button onclick="downloadPDF()" class="btn btn-outline-primary">
+            <i class="fas fa-download me-2"></i>Download PDF
+        </button>
+        <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Order
+        </a>
+    </div>
+
+    <!-- Invoice Content -->
+    <div class="invoice-content">
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="company-info">
+                        <div class="company-logo">
+                            <img src="{% static 'images/logo.png' %}" alt="Company Logo" class="logo">
+                        </div>
+                        <div class="company-details">
+                            <h2 class="company-name">{{ company_info.name }}</h2>
+                            <p class="company-address">{{ company_info.address }}</p>
+                            <p class="company-contact">
+                                <span>Phone: {{ company_info.phone }}</span><br>
+                                <span>Email: {{ company_info.email }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="invoice-title">
+                        <h1>INVOICE</h1>
+                    </div>
+                    <div class="invoice-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Invoice Number:</span>
+                            <span class="meta-value">INV-{{ order.order_number }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Order Number:</span>
+                            <span class="meta-value">#{{ order.order_number }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Invoice Date:</span>
+                            <span class="meta-value">{{ order.order_date|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Due Date:</span>
+                            <span class="meta-value">{{ order.order_date|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="invoice-addresses">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="address-section">
+                        <h5>Bill To:</h5>
+                        <div class="address-details">
+                            <strong>{{ order.billing_address.first_name }} {{ order.billing_address.last_name }}</strong><br>
+                            {{ order.billing_address.address }}<br>
+                            {{ order.billing_address.city }}, {{ order.billing_address.state }} {{ order.billing_address.postal_code }}<br>
+                            {{ order.billing_address.country }}<br>
+                            <br>
+                            <strong>Phone:</strong> {{ order.phone }}<br>
+                            <strong>Email:</strong> {{ order.email }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="address-section">
+                        <h5>Ship To:</h5>
+                        <div class="address-details">
+                            <strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong><br>
+                            {{ order.shipping_address.address }}<br>
+                            {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                            {{ order.shipping_address.country }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="invoice-items">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="item-desc">Description</th>
+                        <th class="item-sku">SKU</th>
+                        <th class="item-qty">Qty</th>
+                        <th class="item-price">Unit Price</th>
+                        <th class="item-total">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td class="item-desc">
+                                <div class="item-info">
+                                    <strong>{{ item.product_name }}</strong>
+                                    {% if item.product_attributes %}
+                                        <div class="item-attributes">
+                                            {% for key, value in item.product_attributes.items %}
+                                                <small>{{ key }}: {{ value }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="item-sku">{{ item.product_sku|default:"N/A" }}</td>
+                            <td class="item-qty">{{ item.quantity }}</td>
+                            <td class="item-price">${{ item.unit_price|floatformat:2 }}</td>
+                            <td class="item-total">${{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Invoice Totals -->
+        <div class="invoice-totals">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Payment Information -->
+                    <div class="payment-info">
+                        <h6>Payment Information</h6>
+                        <div class="payment-details">
+                            <div class="payment-item">
+                                <span>Payment Method:</span>
+                                <span>{{ order.get_payment_method_display }}</span>
+                            </div>
+                            <div class="payment-item">
+                                <span>Payment Status:</span>
+                                <span class="status-paid">{{ order.get_payment_status_display }}</span>
+                            </div>
+                            {% if order.payments.first.reference_number %}
+                                <div class="payment-item">
+                                    <span>Reference Number:</span>
+                                    <span>{{ order.payments.first.reference_number }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="totals-section">
+                        <div class="totals-table">
+                            <div class="total-row">
+                                <span class="total-label">Subtotal:</span>
+                                <span class="total-value">${{ order.subtotal|floatformat:2 }}</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Tax:</span>
+                                <span class="total-value">${{ order.tax_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Shipping:</span>
+                                <span class="total-value">${{ order.shipping_cost|floatformat:2 }}</span>
+                            </div>
+                            {% if order.discount_amount > 0 %}
+                                <div class="total-row discount">
+                                    <span class="total-label">Discount:</span>
+                                    <span class="total-value">-${{ order.discount_amount|floatformat:2 }}</span>
+                                </div>
+                            {% endif %}
+                            <div class="total-row final">
+                                <span class="total-label"><strong>Total Amount:</strong></span>
+                                <span class="total-value"><strong>${{ order.total_amount|floatformat:2 }}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Notes -->
+        {% if order.customer_notes %}
+            <div class="invoice-notes">
+                <h6>Customer Notes:</h6>
+                <p>{{ order.customer_notes }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Terms and Conditions -->
+        <div class="invoice-terms">
+            <h6>Terms and Conditions:</h6>
+            <ul>
+                <li>Payment is due upon receipt of goods unless otherwise agreed.</li>
+                <li>All returns must be made within 30 days of purchase with original receipt.</li>
+                <li>Damaged or defective items will be replaced at no additional cost.</li>
+                <li>Customer is responsible for return shipping costs unless item is defective.</li>
+            </ul>
+        </div>
+
+        <!-- Invoice Footer -->
+        <div class="invoice-footer">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="footer-info">
+                        <h6>Questions about this invoice?</h6>
+                        <p>Contact us at {{ company_info.email }} or {{ company_info.phone }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="footer-signature">
+                        <p>Thank you for your business!</p>
+                        <div class="signature-line">
+                            <span>Authorized Signature</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadPDF() {
+    // Hide print button before printing
+    const printElements = document.querySelectorAll('.d-print-none');
+    printElements.forEach(el => el.style.display = 'none');
+    
+    // Print the page (user can save as PDF)
+    window.print();
+    
+    // Show print button after printing
+    setTimeout(() => {
+        printElements.forEach(el => el.style.display = '');
+    }, 1000);
+}
+</script>
+{% endblock content %}
