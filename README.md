@@ -218,7 +218,6 @@ Feel free to reach out via:
 **GitHub:** [@mehdiseyfie](https://github.com/mehdiseyfie)
 **Email:** [your-email@example.com](mailto:your-email@example.com)
 
-
 ---
 
 ## ⭐ Support the Project
