@@ -155,7 +155,7 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
                 if self.request.user.email: #type:ignore
                     payment_data['email'] = self.request.user.email #type:ignore
                 if hasattr(self.request.user, 'phone') and self.request.user.phone:#type:ignore
-                    payment_data['mobile'] = str(self.request.user.phone)#type:ignore
+                    payment_data['mobile'] = str(self.request.user.phone)#type:ignore 
 
                 response = requests.post(zarinpal_request_url, json=payment_data, timeout=10)
                 if response.status_code != 200:
