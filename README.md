@@ -1,8 +1,3 @@
-حتماً! این نسخه **کاملاً انگلیسی، حرفه‌ای و آماده کپی** از README برای ریپوزیتوری شماست.
-کافیست آن را *عیناً* در فایل `README.md` قرار دهید.
-
----
-
 # ✅ Final Professional README (English Version)
 
 ```markdown
