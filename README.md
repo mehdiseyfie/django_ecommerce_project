@@ -1,4 +1,4 @@
-# ✅ Final Professional README (English Version)
+# ✅README 
 
 ```markdown
 # 🛒 Django Ecommerce Project
