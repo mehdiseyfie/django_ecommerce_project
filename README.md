@@ -211,7 +211,7 @@ See the `LICENSE` file for more information.
 Feel free to reach out via:
 
 **GitHub:** [@mehdiseyfie](https://github.com/mehdiseyfie)
-**Email:** [your-email@example.com](mailto:your-email@example.com)
+**Email:** [mmmehdiseyfi@gmail.com](mailto:mmmehdiseyfi@gmail.com)
 
 ---
 
